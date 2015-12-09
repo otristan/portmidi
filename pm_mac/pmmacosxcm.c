@@ -836,47 +836,18 @@ static CFStringRef ConnectedEndpointName(MIDIEndpointRef endpoint)
 
 char* cm_get_full_endpoint_name(MIDIEndpointRef endpoint)
 {
-#ifdef OLDCODE
-    MIDIEntityRef entity;
-    MIDIDeviceRef device;
-
-    CFStringRef endpointName = NULL;
-    CFStringRef deviceName = NULL;
-#endif
     CFStringRef fullName = NULL;
-    CFStringEncoding defaultEncoding;
     char* newName;
-
-    /* get the default string encoding */
-    defaultEncoding = CFStringGetSystemEncoding();
+    int size;
 
     fullName = ConnectedEndpointName(endpoint);
-    
-#ifdef OLDCODE
-    /* get the entity and device info */
-    MIDIEndpointGetEntity(endpoint, &entity);
-    MIDIEntityGetDevice(entity, &device);
-
-    /* create the nicely formated name */
-    MIDIObjectGetStringProperty(endpoint, kMIDIPropertyName, &endpointName);
-    MIDIObjectGetStringProperty(device, kMIDIPropertyName, &deviceName);
-    if (deviceName != NULL) {
-        fullName = CFStringCreateWithFormat(NULL, NULL, CFSTR("%@: %@"),
-                                            deviceName, endpointName);
-    } else {
-        fullName = endpointName;
-    }
-#endif    
+    size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(fullName), kCFStringEncodingUTF8);;   
     /* copy the string into our buffer */
-    newName = (char *) malloc(CFStringGetLength(fullName) + 1);
-    CFStringGetCString(fullName, newName, CFStringGetLength(fullName) + 1,
-                       defaultEncoding);
+    newName = (char *) malloc(size + 1);
+    CFStringGetCString(fullName, newName, size + 1,
+                       kCFStringEncodingUTF8);
 
     /* clean up */
-#ifdef OLDCODE
-    if (endpointName) CFRelease(endpointName);
-    if (deviceName) CFRelease(deviceName);
-#endif
     if (fullName) CFRelease(fullName);
 
     return newName;
